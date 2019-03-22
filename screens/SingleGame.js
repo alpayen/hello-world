@@ -1,9 +1,10 @@
 import React from 'react'
-import {ActivityIndicator, View, Linking} from "react-native";
-import {Button, Icon, Text} from "react-native-elements";
+import {StyleSheet, Animated, View, Linking, ScrollView, TouchableOpacity} from "react-native";
+import {Text} from "react-native-elements";
 import {connect} from "react-redux";
 
 import {fetchById} from "../store/actions"
+import {globalStyles} from "../style";
 
 const mapStateToProps = (state) => {
     return {
@@ -13,50 +14,83 @@ const mapStateToProps = (state) => {
 };
 
 class SingleGame extends React.Component {
+
     static navigationOptions = {
-        title: "Single",
+        header: null,
     };
 
-    render() {
-        const {current_game, loading} = this.props
-        if (current_game.name !== undefined && !loading) {
-            return (
-                <View style={styles.mainContainer}>
-                    <Text h1>{current_game.name}</Text>
-                    <Text h3>Players : {current_game.players}</Text>
-                    <Text h3>Year : {current_game.year}</Text>
-                    <Text h4>{current_game.description_en}</Text>
-                    <Button
-                        title="More info"
-                        onPress={() => {
-                            Linking.openURL(current_game.url)
-                        }}
-                    />
-                </View>
-            )
-        } else {
-            return (
-                <View>
-                    <ActivityIndicator/>
-                </View>
-            )
+    state = {
+        fadeAnim: new Animated.Value(0)
+    };
+
+    async componentDidMount() {
+        try {
+            if (this.props.current_game.id !== this.props.navigation.getParam('game_id')) {
+                await fetchById(this.props.navigation.getParam('game_id'))
+            }
+            Animated.timing(
+                this.state.fadeAnim,
+                {
+                    toValue: 1,
+                    duration: 300
+                }
+            ).start()
+        } catch (e) {
+            console.log(e)
         }
     }
+
+    render() {
+        const {current_game} = this.props;
+        let {fadeAnim} = this.state;
+        return (
+            <ScrollView style={{...globalStyles.mainContainer, ...styles.singleContainer, ...StyleSheet.absoluteFill}}>
+                <TouchableOpacity
+                    title="Go back"
+                    onPress={() => this.props.navigation.goBack()}
+                    style={globalStyles.backButton}>
+                    <Text style={globalStyles.backButtonTitle}>
+                        Go back
+                    </Text>
+                </TouchableOpacity>
+                <Animated.View style={{height:"100%",opacity: fadeAnim}}>
+                    <View style={globalStyles.paddedItem}>
+                        <Text h4 style={globalStyles.paddedItemTitle}>{current_game.name}</Text>
+                    </View>
+                    <View style={globalStyles.textContainer}>
+                        <Text style={globalStyles.textContainerText}><Text style={{fontWeight: "bold"}}>Players :</Text> {current_game.players}</Text>
+                        <Text style={globalStyles.textContainerText}><Text style={{fontWeight: "bold"}}>Type :</Text> {current_game.type}</Text>
+                        <Text style={globalStyles.textContainerText}><Text style={{fontWeight: "bold"}}>Year :</Text> {current_game.year}</Text>
+                    </View>
+
+                    <View style={globalStyles.paddedItem}>
+                        <Text h4 style={globalStyles.description}>{current_game.description_en}</Text>
+                    </View>
+
+                    <TouchableOpacity
+                        style={globalStyles.moreInfo}
+                        onPress={() => {
+                            Linking.openURL(current_game.url)
+                        }}>
+                        <Text style={globalStyles.moreInfoText}>
+                            More info
+                        </Text>
+                    </TouchableOpacity>
+                </Animated.View>
+            </ScrollView>
+        )
+    }
+
+
 }
 
 
 export default connect(mapStateToProps)(SingleGame)
 
 const styles = {
-    mainContainer: {
-        flex: 1,
-        flexDirection:"column",
-        justifyContent:"center",
-        alignItems:"center"
-
-    },
+    singleContainer: {},
     title: {
-        flex:3,
+        flex: 3,
     },
 
     container: {

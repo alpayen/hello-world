@@ -23,12 +23,12 @@ export const fetchAll = async () => {
             store.dispatch({
                 type: types.FETCH_ALL,
                 payload: {games: games}
-            })
+            });
             resolve()
         } catch (e) {
 
             console.log(e);
-            reject("An error as occurred fetching all the posts")
+            reject("An error as occurred fetching all the games")
         }
     })
 };
@@ -41,7 +41,7 @@ export const fetchById = async (id) => {
         try {
             const result = await fetchGameById(id);
             const game = await result.json();
-            await storeAsync('last_selected_game', game.name);
+            await storeAsync('last_selected_game', JSON.stringify(game));
             store.dispatch({
                 type: types.FETCH_BY_ID,
                 payload: {game: game}
@@ -49,16 +49,16 @@ export const fetchById = async (id) => {
         resolve()
         } catch (e) {
             console.log(e);
-            reject(`An error as occured fecthing post ${id}`);
+            reject(`An error as occurred fetching post ${id}`);
         }
     })
 };
 
 export const fetchInitialGameState = async () => {
-    const last_selected_game = await retrieveAsync('last_selected_game') || "";
+    const last_selected_game = await retrieveAsync('last_selected_game') || false;
     store.dispatch({
         type: types.FETCH_INITIAL_GAME_STATE,
-        payload: {last_selected_game: last_selected_game}
+        payload: {current_game: !last_selected_game ? {} : JSON.parse(last_selected_game)}
     });
 };
 

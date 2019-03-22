@@ -1,7 +1,8 @@
 import React from 'react'
-import {Animated, ScrollView, View} from "react-native";
+import {Animated, ScrollView, View, TouchableOpacity} from "react-native";
 import {Icon, ListItem, Text} from "react-native-elements";
 import {connect} from "react-redux";
+import {globalStyles} from "../style";
 
 
 import {fetchAll, fetchById} from "../store/actions"
@@ -11,13 +12,14 @@ const mapStateToProps = (state) => {
     return {
         games: state.gamesState.games,
         loading: state.gamesState.loading,
-        last_selected_game: state.gamesState.last_selected_game,
         current_game: state.gamesState.current_game
     }
 };
 
 class HomeScreen extends React.Component {
-
+    static navigationOptions = {
+        header:null
+    }
     state = {
         fadeAnim: new Animated.Value(0)
     };
@@ -37,56 +39,54 @@ class HomeScreen extends React.Component {
         }
     }
 
-    async _fetchAndNavigate(id) {
-
-        try {
-            if (this.props.current_game.id !== id) {
-                await fetchById(id);
-            }
-            this.props.navigation.navigate('SingleGame')
-        } catch (e) {
-            console.log(e)
-        }
-    }
 
     render() {
         let {fadeAnim} = this.state;
 
         const {navigate} = this.props.navigation;
-        const {games, last_selected_game} = this.props;
-        const gamesList = games.map((game, i) => (
-            <ListItem
-                key={i}
-                title={game.name}
-                onPress={() => this._fetchAndNavigate(game.id)}
-                chevron
-
-            />
-        ));
+        const {games, current_game} = this.props;
+        const lastGame = Object.entries(current_game).length === 0 && current_game.constructor === Object ?
+            null : (
+                <TouchableOpacity
+                    onPress={() => navigate("SingleGame", {game_id: current_game.id})}
+                    style={{...globalStyles.paddedItem, ...styles.lastSelectedGame}}>
+                    <Text style={{...globalStyles.paddedItemTitle}}>
+                        Last Game : {current_game.name}
+                    </Text>
+                </TouchableOpacity>
+            );
 
         return (
-            <Animated.ScrollView style={{
-                ...styles.mainContainer,
-                opacity: fadeAnim
-            }}>
+            <ScrollView style={globalStyles.mainContainer}>
                 <View style={styles.title}>
                     <Icon
                         name='videogame-asset'
-                        color='#000'
+                        color='#393939'
                         size={50}
                         style={styles.icon}
                     />
-                    <Text h2>Hello Games</Text>
+                    <Text h2 style={styles.titleText}>Hello Games</Text>
                 </View>
 
-                <View style={styles.listContainer}>
-                    {gamesList}
-                </View>
+                {lastGame}
 
-                <View style={styles.lastSelectedGameContainer}>
-                    <Text h4 style={styles.lastSelectedGame}>{last_selected_game}</Text>
-                </View>
-            </Animated.ScrollView>
+                <Animated.View style={{
+                    ...globalStyles.listContainer,
+                    opacity: fadeAnim
+                }}>
+
+                    {games.map((game, i) => (
+                        <TouchableOpacity
+                            key={i}
+                            onPress={() => navigate("SingleGame", {game_id: game.id})}
+                            style={globalStyles.paddedItem}>
+                            <Text style={globalStyles.paddedItemTitle}>
+                                {game.name}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </Animated.View>
+            </ScrollView>
         )
     }
 }
@@ -95,25 +95,26 @@ class HomeScreen extends React.Component {
 export default connect(mapStateToProps)(HomeScreen)
 
 const styles = {
-    mainContainer: {},
+
     title: {
-        height: "20%",
         flexDirection: 'row',
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        marginBottom: 50,
     },
+
+    titleText:{
+        color:"#393939"
+    },
+
+
     icon: {
         marginRight: 5
     },
-    lastSelectedGameContainer: {
-        height: "20%",
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    lastSelectedGame: {
 
-        textAlign: "center",
-        color: "#a02e36"
+    lastSelectedGame: {
+        backgroundColor: "#ff7f5b",
+        borderColor: '#ff7f5b',
+        marginBottom: 40
     }
 };

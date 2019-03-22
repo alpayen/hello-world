@@ -1,12 +1,10 @@
 import {combineReducers} from "redux";
 import types from "./types";
-import {storeAsync} from "./coldStorage";
 
 const defaultGamesState = {
     games: [],
     current_game: {},
     loading: true,
-    last_selected_game :""
 };
 
 
