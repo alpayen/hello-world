@@ -13,14 +13,6 @@ const mapStateToProps = (state) => {
 };
 
 class SingleGame extends React.Component {
-    componentDidMount() {
-        if (this.props.current_game.id !== this.props.navigation.getParam('game_id'))
-            fetchById(this.props.navigation.getParam('game_id'));
-
-
-
-    }
-
     static navigationOptions = {
         title: "Single",
     };

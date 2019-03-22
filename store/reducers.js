@@ -5,7 +5,7 @@ import {storeAsync} from "./coldStorage";
 const defaultGamesState = {
     games: [],
     current_game: {},
-    loading: false,
+    loading: true,
     last_selected_game :""
 };
 

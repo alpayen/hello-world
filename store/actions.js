@@ -12,49 +12,54 @@ const fetchGameById = (id) => {
 
 
 export const fetchAll = async () => {
-    store.dispatch({
-        type: types.FETCH_BEGINS
-    });
-
-    try {
-        const result = await fetchGames();
-        const games = await result.json();
+    return new Promise(async (resolve, reject) => {
         store.dispatch({
-            type: types.FETCH_ALL,
-            payload: {games: games}
-        })
-    } catch (e) {
-        console.log(e);
-        return null;
-    }
+            type: types.FETCH_BEGINS
+        });
+
+        try {
+            const result = await fetchGames();
+            const games = await result.json();
+            store.dispatch({
+                type: types.FETCH_ALL,
+                payload: {games: games}
+            })
+            resolve()
+        } catch (e) {
+
+            console.log(e);
+            reject("An error as occurred fetching all the posts")
+        }
+    })
 };
 
 export const fetchById = async (id) => {
-    store.dispatch({
-        type: types.FETCH_BEGINS
-    });
-
-    try {
-        const result = await fetchGameById(id);
-        const game = await result.json();
-        await storeAsync('last_selected_game', game.name);
-        console.log(store)
-        store.dispatch( {
-            type: types.FETCH_BY_ID,
-            payload: {game: game}
+    return new Promise(async (resolve, reject) => {
+        store.dispatch({
+            type: types.FETCH_BEGINS
         });
-    } catch (e) {
-        console.log(e);
-        return null;
-    }
+        try {
+            const result = await fetchGameById(id);
+            const game = await result.json();
+            await storeAsync('last_selected_game', game.name);
+            store.dispatch({
+                type: types.FETCH_BY_ID,
+                payload: {game: game}
+            });
+        resolve()
+        } catch (e) {
+            console.log(e);
+            reject(`An error as occured fecthing post ${id}`);
+        }
+    })
 };
 
-export const fetchInitialGameState = async () =>{
+export const fetchInitialGameState = async () => {
     const last_selected_game = await retrieveAsync('last_selected_game') || "";
-     store.dispatch({
+    store.dispatch({
         type: types.FETCH_INITIAL_GAME_STATE,
-        payload: {last_selected_game : last_selected_game }
-     });
+        payload: {last_selected_game: last_selected_game}
+    });
 };
 
 

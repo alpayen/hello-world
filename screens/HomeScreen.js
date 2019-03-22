@@ -1,59 +1,92 @@
 import React from 'react'
-import {ActivityIndicator, ScrollView, View} from "react-native";
-import {Divider, Icon, ListItem, Text} from "react-native-elements";
+import {Animated, ScrollView, View} from "react-native";
+import {Icon, ListItem, Text} from "react-native-elements";
 import {connect} from "react-redux";
 
-import {fetchAll} from "../store/actions"
+
+import {fetchAll, fetchById} from "../store/actions"
 
 
 const mapStateToProps = (state) => {
     return {
         games: state.gamesState.games,
         loading: state.gamesState.loading,
-        last_selected_game: state.gamesState.last_selected_game
+        last_selected_game: state.gamesState.last_selected_game,
+        current_game: state.gamesState.current_game
     }
 };
 
 class HomeScreen extends React.Component {
-    componentDidMount() {
-        fetchAll();
+
+    state = {
+        fadeAnim: new Animated.Value(0)
+    };
+
+    async componentDidMount() {
+        try {
+            await fetchAll();
+            Animated.timing(
+                this.state.fadeAnim,
+                {
+                    toValue: 1,
+                    duration: 300
+                }
+            ).start()
+        } catch (e) {
+            console.log(e)
+        }
+    }
+
+    async _fetchAndNavigate(id) {
+
+        try {
+            if (this.props.current_game.id !== id) {
+                await fetchById(id);
+            }
+            this.props.navigation.navigate('SingleGame')
+        } catch (e) {
+            console.log(e)
+        }
     }
 
     render() {
-        const {navigate} = this.props.navigation;
-        const {loading, games, last_selected_game} = this.props;
-        const gamesList =
-            loading ?
-                (<ActivityIndicator size="large" color="#000"/>) :
-                games.map((game, i) => (
-                    <ListItem
-                        key={i}
-                        title={game.name}
-                        onPress={() => navigate('SingleGame', {game_id: game.id})}
-                        chevron
+        let {fadeAnim} = this.state;
 
-                    />
-                ));
+        const {navigate} = this.props.navigation;
+        const {games, last_selected_game} = this.props;
+        const gamesList = games.map((game, i) => (
+            <ListItem
+                key={i}
+                title={game.name}
+                onPress={() => this._fetchAndNavigate(game.id)}
+                chevron
+
+            />
+        ));
 
         return (
-            <ScrollView style={styles.mainContainer}>
+            <Animated.ScrollView style={{
+                ...styles.mainContainer,
+                opacity: fadeAnim
+            }}>
                 <View style={styles.title}>
                     <Icon
                         name='videogame-asset'
                         color='#000'
                         size={50}
+                        style={styles.icon}
                     />
                     <Text h2>Hello Games</Text>
                 </View>
 
-                <View styles={styles.listContainer}>
+                <View style={styles.listContainer}>
                     {gamesList}
                 </View>
 
-                <View styles={styles.lastSelectedGameContainer}>
-                    <Text h4 styles={styles.title}>{last_selected_game}</Text>
+                <View style={styles.lastSelectedGameContainer}>
+                    <Text h4 style={styles.lastSelectedGame}>{last_selected_game}</Text>
                 </View>
-            </ScrollView>
+            </Animated.ScrollView>
         )
     }
 }
@@ -62,28 +95,24 @@ class HomeScreen extends React.Component {
 export default connect(mapStateToProps)(HomeScreen)
 
 const styles = {
-    mainContainer: {
-
-    },
+    mainContainer: {},
     title: {
-        height:"20%",
+        height: "20%",
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center'
     },
+    icon: {
+        marginRight: 5
+    },
+    lastSelectedGameContainer: {
+        height: "20%",
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    lastSelectedGame: {
 
-    listContainer: {
-        flex: 2,
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    lastSelectedGameContainer:{
-        height:"20%",
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    lastSelectedGame:{
         textAlign: "center",
         color: "#a02e36"
     }
